@@ -6,7 +6,7 @@ import java.util.Random;
 import ml.classifiers.DecisionTreeClassifier;
 import ml.data.DataSet;
 import ml.data.Example;
-import ml.utils.HashMapCounterDouble;
+import ml.utils.HashMapCounter;
 
 /**
  * 
@@ -52,10 +52,10 @@ public class RFFeatureBaggingClassifier implements Classifier {
 	 * @param example 
 	 */
 	public double classify(Example example) {
-		HashMapCounterDouble<Double> counter = new HashMapCounterDouble<Double>();
+		HashMapCounter<Double> counter = new HashMapCounter<Double>();
 		for (DecisionTreeClassifier d : this.trees) {
 			double prediction = d.classify(example);
-			counter.increment(prediction, 1);
+			counter.increment(prediction);
 		}	
 		return counter.sortedEntrySet().get(0).getKey();
 	}
@@ -66,6 +66,10 @@ public class RFFeatureBaggingClassifier implements Classifier {
 
 	public void setIterations(int newTrees) {
 		this.treesInTheForest = newTrees;
+	}
+	
+	public void setDepthLimit(int newDepth) {
+		this.depthLimit = newDepth;
 	}
 	
 }
