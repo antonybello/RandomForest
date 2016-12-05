@@ -3,6 +3,7 @@ package ml.classifiers;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 import ml.data.DataSet;
@@ -24,6 +25,7 @@ public class DecisionTreeClassifier implements Classifier{
 	private Set<Integer> featureIndices;
 	private DecisionTreeNode decisionTree;
 	private int depthMax = Integer.MAX_VALUE;
+	private boolean splitRandomly = false;
 	
 	public void train(DataSet data) {
 		if( data.getData().size() == 0 ){
@@ -65,7 +67,15 @@ public class DecisionTreeClassifier implements Classifier{
 			// check if all examples have the same features
 					
 			// find the best feature that hasn't been used yet to split on
-			int bestFeature = getBestFeatureIndex(currentData, usedFeatures);
+			int bestFeature;
+			if (splitRandomly) {
+				Random rand = new Random();
+				ArrayList<Integer> unusedFeatures = new ArrayList<Integer>(this.featureIndices);
+				unusedFeatures.removeAll(usedFeatures);
+				bestFeature = unusedFeatures.get(rand.nextInt(unusedFeatures.size()));
+			}
+			else
+				bestFeature = getBestFeatureIndex(currentData, usedFeatures);
 			
 			// bestFeature != -1
 			// split on the best feature
@@ -245,5 +255,9 @@ public class DecisionTreeClassifier implements Classifier{
 			this.majorityCount = majorityCount;
 			this.confidence = confidence;
 		}
-	}	
+	}
+	
+	public void setSplitRandomly(boolean splitRandomly) {
+		this.splitRandomly = splitRandomly;
+	}
 }

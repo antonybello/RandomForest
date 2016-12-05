@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -113,7 +112,7 @@ public class DataSet {
 	 * dataset. Used for bootstrap aggregate bagging.
 	 * @return dataset
 	 */
-	public DataSet createDatasetWithRandomExampleSubset() {
+	public DataSet createDatasetWithBagging() {
 		Random rand = new Random();
 		
 		// Create new copy of our dataset with our feature map
@@ -122,9 +121,8 @@ public class DataSet {
 		// Iterate through our list of examples and add random examples w/ replacement
 		ArrayList<Example> data = getData(); 
 		
-		for (int i = 0; i < data.size(); i++) {
+		for (int i = 0; i < data.size(); i++)
 			result.addData(data.get(rand.nextInt(getData().size())));
-		}
 		
 		return result;
 	}
@@ -134,24 +132,22 @@ public class DataSet {
 	 * @param featureSubsetSize
 	 * @return data set
 	 */
-	public DataSet createDatasetWithFeatureSubset(int featureSubsetSize) {		
-		
+	public DataSet createDatasetWithFeatureBagging() {	
 		// Shuffle the key indices to get random features for the new feature map
 		ArrayList<Integer> newKeys = new ArrayList<Integer>(this.featureMap.keySet()); 
 		Collections.shuffle(newKeys);
 		
 		HashMap<Integer, String> newFeatureMap = new HashMap<Integer, String>();
-		
-		for(int i = 0; i < featureSubsetSize; i++) {
-			int newFeatureIndex = newKeys.get(i);
-			newFeatureMap.put(newFeatureIndex, this.featureMap.get(newFeatureIndex));
+		for(int i = 0; i < Math.round(Math.sqrt(getAllFeatureIndices().size())); i++) {
+			int key = newKeys.get(i);
+			newFeatureMap.put(key, this.featureMap.get(key));
 		}
 		
 		// With a new feature map, create a dataset
 		DataSet d = new DataSet(newFeatureMap);
 
 		// Assign data with only features specified in the new dataset's feature map
-		d.addDataWithMatchingFeatures(this.data);
+		d.addDataWithMatchingFeatures(this.createDatasetWithBagging().getData());
 		
 		return d;
 	}
@@ -163,19 +159,18 @@ public class DataSet {
 	 */
 	public void addDataWithMatchingFeatures(ArrayList<Example> addMe) {
 		for (Example e : addMe) {
-			Example newExampleWithSubsetFeatures = new Example();
+			Example newE = new Example();
 			
 			// Within this example's feature set, add features only existing in the feature map
-			for (int featureNum : e.getFeatureSet()) {
-				if (this.featureMap.containsKey(featureNum)) {
-					newExampleWithSubsetFeatures.addFeature(featureNum, e.getFeature(featureNum));
-					newExampleWithSubsetFeatures.setLabel(e.getLabel());
-				}
-			}
+			for (int i : this.getAllFeatureIndices())
+				if (e.getFeatureSet().contains(i))
+					newE.addFeature(i, e.getFeature(i));
+					
+			newE.setLabel(e.getLabel());
 			
 			// Add this example to our dataset along with its label
-			data.add(newExampleWithSubsetFeatures);
-			labels.add(newExampleWithSubsetFeatures.getLabel());
+			this.data.add(newE);
+			this.labels.add(newE.getLabel());
 		}	
 	}
 	

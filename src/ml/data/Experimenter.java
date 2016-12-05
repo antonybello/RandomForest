@@ -9,28 +9,34 @@ import ml.classifiers.*;
  */
 public class Experimenter {
 	public static void main(String[] args) {
-		DataSet wineDataset = new DataSet("wines.train", DataSet.TEXTFILE);
+//		DataSet dataset = new DataSet("wines.train", DataSet.TEXTFILE);
+		DataSet dataset = new DataSet("titanic-train.csv", DataSet.CSVFILE);
 
 		DecisionTreeClassifier d = new DecisionTreeClassifier();
 		d.setDepthLimit(5);
 		System.out.println("Decision Tree");
 		System.out.println("test acc train acc");
-		DataSetSplit splits = wineDataset.split(0.8);
-		double[] accuracies = calcAccuracy(wineDataset, d, splits);
+		DataSetSplit splits = dataset.split(0.8);
+		double[] accuracies = calcAccuracy(dataset, d, splits);
 		System.out.format("%-10.4f%.4f%n", accuracies[0], accuracies[1]);
 		
-		RFTreeBaggingClassifier treeBagger = new RFTreeBaggingClassifier();
+		EnsembleTreeClassifier etc = new EnsembleTreeClassifier();
 		System.out.println("Tree Bagging");
 		System.out.println("test acc train acc");
-		accuracies = calcAccuracy(wineDataset, treeBagger, splits);
+		accuracies = calcAccuracy(dataset, etc, splits);
 		System.out.format("%-10.4f%.4f%n", accuracies[0], accuracies[1]);	
 		
-		RFFeatureBaggingClassifier featureBagger = new RFFeatureBaggingClassifier();
+		etc.setFeatureBagging(true);
 		System.out.println("Feature Bagging");
 		System.out.println("depth test acc train acc");
-		accuracies = calcAccuracy(wineDataset, featureBagger, splits);
+		accuracies = calcAccuracy(dataset, etc, splits);
 		System.out.format("%-10.4f%.4f%n", accuracies[0], accuracies[1]);
 		
+		etc.setExtraTrees(true);
+		System.out.println("ExtraTrees");
+		System.out.println("depth test acc train acc");
+		accuracies = calcAccuracy(dataset, etc, splits);
+		System.out.format("%-10.4f%.4f%n", accuracies[0], accuracies[1]);
 	}
 
 	/**
