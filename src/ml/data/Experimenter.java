@@ -9,8 +9,8 @@ import ml.classifiers.*;
  */
 public class Experimenter {
 	public static void main(String[] args) {
-//		DataSet dataset = new DataSet("wines.train", DataSet.TEXTFILE);
-		DataSet dataset = new DataSet("titanic-train.csv", DataSet.CSVFILE);
+		DataSet dataset = new DataSet("wines.train", DataSet.TEXTFILE);
+//		DataSet dataset = new DataSet("titanic-train.csv", DataSet.CSVFILE);
 
 		DecisionTreeClassifier d = new DecisionTreeClassifier();
 		d.setDepthLimit(5);

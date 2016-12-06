@@ -134,11 +134,11 @@ public class DataSet {
 	 */
 	public DataSet createDatasetWithFeatureBagging() {	
 		// Shuffle the key indices to get random features for the new feature map
-		ArrayList<Integer> newKeys = new ArrayList<Integer>(this.featureMap.keySet()); 
+		ArrayList<Integer> newKeys = new ArrayList<Integer>(this.getAllFeatureIndices()); 
 		Collections.shuffle(newKeys);
 		
 		HashMap<Integer, String> newFeatureMap = new HashMap<Integer, String>();
-		for(int i = 0; i < Math.round(Math.sqrt(getAllFeatureIndices().size())); i++) {
+		for(int i = 0; i < Math.round(Math.sqrt(newKeys.size())); i++) {
 			int key = newKeys.get(i);
 			newFeatureMap.put(key, this.featureMap.get(key));
 		}
@@ -165,12 +165,14 @@ public class DataSet {
 			for (int i : this.getAllFeatureIndices())
 				if (e.getFeatureSet().contains(i))
 					newE.addFeature(i, e.getFeature(i));
-					
-			newE.setLabel(e.getLabel());
 			
-			// Add this example to our dataset along with its label
-			this.data.add(newE);
-			this.labels.add(newE.getLabel());
+			if (!newE.getFeatureSet().isEmpty()) {
+				newE.setLabel(e.getLabel());
+				
+				// Add this example to our dataset along with its label
+				this.data.add(newE);
+				this.labels.add(newE.getLabel());
+			}
 		}	
 	}
 	
