@@ -1,10 +1,9 @@
 # RandomForest
-Random Forest Classifier for CS158-Machine Learning at Pomona College
+Random Forest Classifier for CS158-Machine Learning at Pomona College. Includes Tree Bagging, Feature Bagging, and ExtraTree implementations!
 
-Main classifiers in this file are located in `src/ml/classifiers`:
+Main classifiers in this project are located in `src/ml/classifiers`:
 - `DecisionTreeClassifier.java`
-- `RFTreeBaggingClassifier.java`
-- `RFFeatureBaggingClassifier.java`
+- `EnsembleTreeClassifier.java`
 
-Preliminary experiments are located in `src/ml/data`. 
+Experiments are located in `src/ml/data`. 
 
