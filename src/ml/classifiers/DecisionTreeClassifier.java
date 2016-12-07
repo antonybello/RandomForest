@@ -1,6 +1,7 @@
 package ml.classifiers;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
@@ -25,7 +26,8 @@ public class DecisionTreeClassifier implements Classifier{
 	private Set<Integer> featureIndices;
 	private DecisionTreeNode decisionTree;
 	private int depthMax = Integer.MAX_VALUE;
-	private boolean splitRandomly = false;
+	private boolean extraTrees = false;
+	private boolean featureBagging = false;
 	
 	public void train(DataSet data) {
 		if( data.getData().size() == 0 ){
@@ -33,7 +35,7 @@ public class DecisionTreeClassifier implements Classifier{
 		}
 		featureMap = data.getFeatureMap();
 		featureIndices = data.getAllFeatureIndices();
-		decisionTree = buildTree(data.getData(), new HashSet<Integer>(), depthMax);
+		decisionTree = buildTree(data.getData(), depthMax);
 	}
 		
 	/**
@@ -53,29 +55,39 @@ public class DecisionTreeClassifier implements Classifier{
 	 * @param depthLimit the maximum depth we can build this tree
 	 * @return the learned decision tree
 	 */
-	private DecisionTreeNode buildTree(ArrayList<Example> currentData, HashSet<Integer> usedFeatures, int depthLimit){
+	private DecisionTreeNode buildTree(ArrayList<Example> currentData, int depthLimit){
 		DataMajority majority = getMajorityLabel(currentData);
 				
 		// base cases:
 		// 1. they're all the same label
 		// 2. we're out of features to examine
 		if( majority.majorityCount == currentData.size() ||
-			usedFeatures.size() == featureIndices.size() ||
 			depthLimit == 0){
 			return new DecisionTreeNode(majority.majorityLabel, majority.confidence);
 		}else{
-			// check if all examples have the same features
-					
+			
+			Set<Integer> featureCandidates;
+			if (featureBagging) {
+				featureCandidates = new HashSet<Integer>();
+				
+				ArrayList<Integer> newIndices = new ArrayList<Integer>(this.featureIndices);
+				Collections.shuffle(newIndices);
+				for(int i = 0; i < Math.round(Math.sqrt(newIndices.size())); i++)
+					featureCandidates.add(newIndices.get(i));
+			}
+			else 
+				featureCandidates = this.featureIndices;
+			
+			
 			// find the best feature that hasn't been used yet to split on
 			int bestFeature;
-			if (splitRandomly) {
+			if (extraTrees) {
 				Random rand = new Random();
-				ArrayList<Integer> unusedFeatures = new ArrayList<Integer>(this.featureIndices);
-				unusedFeatures.removeAll(usedFeatures);
-				bestFeature = unusedFeatures.get(rand.nextInt(unusedFeatures.size()));
+				ArrayList<Integer> fs = new ArrayList<Integer>(featureCandidates);
+				bestFeature = fs.get(rand.nextInt(fs.size()));
 			}
 			else
-				bestFeature = getBestFeatureIndex(currentData, usedFeatures);
+				bestFeature = getBestFeatureIndex(currentData, featureCandidates);
 			
 			// bestFeature != -1
 			// split on the best feature
@@ -84,21 +96,18 @@ public class DecisionTreeClassifier implements Classifier{
 			// create a new decision tree node
 			DecisionTreeNode node = new DecisionTreeNode(bestFeature);
 			
-			HashSet<Integer> featureCopy = (HashSet<Integer>)usedFeatures.clone();
-			featureCopy.add(bestFeature);
-			
 			// left branch
 			if( splits[0].size() == 0 ){
 				node.setLeft(new DecisionTreeNode(majority.majorityLabel, majority.confidence));
 			}else{
-				node.setLeft(buildTree(splits[0],featureCopy, depthLimit-1));
+				node.setLeft(buildTree(splits[0], depthLimit-1));
 			}
 			
 			// right branch
 			if( splits[1].size() == 0 ){
 				node.setRight(new DecisionTreeNode(majority.majorityLabel, majority.confidence));
 			}else{
-				node.setRight(buildTree(splits[1], featureCopy, depthLimit-1));
+				node.setRight(buildTree(splits[1], depthLimit-1));
 			}
 			
 			return node;
@@ -112,19 +121,17 @@ public class DecisionTreeClassifier implements Classifier{
 	 * @param usedFeatures which features have been used already and are NOT eligible for splitting on
 	 * @return the index of the best feature
 	 */
-	private int getBestFeatureIndex(ArrayList<Example> currentData, HashSet<Integer> usedFeatures){
+	private int getBestFeatureIndex(ArrayList<Example> currentData, Set<Integer> featureCandidates){
 		int bestFeature = -1;
 		double bestFeatureScore = 1.0; // lower is better for now
 		
-		for( int featureIndex: featureIndices){
-			if( !usedFeatures.contains(featureIndex) ){
-				double error = averageTrainingError(currentData, featureIndex);
-									
-				if( error < bestFeatureScore ||
-					(error == bestFeatureScore && featureIndex < bestFeature )){
-					bestFeatureScore = error;
-					bestFeature = featureIndex;
-				}
+		for( int featureIndex: featureCandidates){
+			double error = averageTrainingError(currentData, featureIndex);
+								
+			if( error < bestFeatureScore ||
+				(error == bestFeatureScore && featureIndex < bestFeature )){
+				bestFeatureScore = error;
+				bestFeature = featureIndex;
 			}
 		}
 		
@@ -257,7 +264,11 @@ public class DecisionTreeClassifier implements Classifier{
 		}
 	}
 	
-	public void setSplitRandomly(boolean splitRandomly) {
-		this.splitRandomly = splitRandomly;
+	public void setExtraTrees(boolean extraTrees) {
+		this.extraTrees = extraTrees;
+	}
+	
+	public void setFeatureBagging(boolean featureBagging) {
+		this.featureBagging = featureBagging;
 	}
 }

@@ -33,8 +33,9 @@ public class EnsembleTreeClassifier implements Classifier {
 		for (int i = 0; i < this.numTrees; i++) {
 			DecisionTreeClassifier d = new DecisionTreeClassifier();
 			d.setDepthLimit(this.depthLimit);
-			d.setSplitRandomly(extraTrees);
-			DataSet newData = featureBagging ? data.createDatasetWithFeatureBagging() : data.createDatasetWithBagging();
+			d.setExtraTrees(extraTrees);
+			d.setFeatureBagging(featureBagging);
+			DataSet newData = data.createDatasetWithBagging();
 			d.train(newData);
 			this.trees.add(d);
 		}

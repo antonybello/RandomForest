@@ -128,55 +128,6 @@ public class DataSet {
 	}
 	
 	/**
-	 * Creates a DataSet with the subset of features in our current data set. 
-	 * @param featureSubsetSize
-	 * @return data set
-	 */
-	public DataSet createDatasetWithFeatureBagging() {	
-		// Shuffle the key indices to get random features for the new feature map
-		ArrayList<Integer> newKeys = new ArrayList<Integer>(this.getAllFeatureIndices()); 
-		Collections.shuffle(newKeys);
-		
-		HashMap<Integer, String> newFeatureMap = new HashMap<Integer, String>();
-		for(int i = 0; i < Math.round(Math.sqrt(newKeys.size())); i++) {
-			int key = newKeys.get(i);
-			newFeatureMap.put(key, this.featureMap.get(key));
-		}
-		
-		// With a new feature map, create a dataset
-		DataSet d = new DataSet(newFeatureMap);
-
-		// Assign data with only features specified in the new dataset's feature map
-		d.addDataWithMatchingFeatures(this.createDatasetWithBagging().getData());
-		
-		return d;
-	}
-	
-	/**
-	 * Creates a new list of examples that have features matching 
-	 * identically to that of the dataset's. 
-	 * @param addMe
-	 */
-	public void addDataWithMatchingFeatures(ArrayList<Example> addMe) {
-		for (Example e : addMe) {
-			Example newE = new Example();
-			
-			// Within this example's feature set, add features only existing in the feature map
-			for (int i : this.getAllFeatureIndices())
-				if (e.getFeatureSet().contains(i))
-					newE.addFeature(i, e.getFeature(i));
-			
-			if (!newE.getFeatureSet().isEmpty()) {
-				newE.setLabel(e.getLabel());
-				
-				// Add this example to our dataset along with its label
-				this.data.add(newE);
-				this.labels.add(newE.getLabel());
-			}
-		}	
-	}
-	
-	/**
 	 * Get the mapping from feature indices to feature names.  This is
 	 * mostly useful when trying to print out the final models.
 	 * 
